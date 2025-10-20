@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMockForms } from '@/hooks/useMockForms';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { FileText, CheckCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { FormChat } from '@/components/FormChat';
 
@@ -19,10 +20,18 @@ const FormView = () => {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const handleBackToHome = () => {
     window.location.href = '/';
   };
+
+  useEffect(() => {
+    setIsAnimating(true);
+    const timer = setTimeout(() => setIsAnimating(false), 300);
+    return () => clearTimeout(timer);
+  }, [currentStep]);
 
   if (!form || form.status !== 'published') {
     return (
@@ -53,9 +62,35 @@ const FormView = () => {
     return '';
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const currentField = form?.fields[currentStep];
+  const progress = form ? ((currentStep + 1) / form.fields.length) * 100 : 0;
 
+  const handleNext = () => {
+    if (!currentField) return;
+
+    const error = validateField(currentField, answers[currentField.id]);
+    if (error) {
+      setErrors({ ...errors, [currentField.id]: error });
+      toast.error(error);
+      return;
+    }
+
+    setErrors({ ...errors, [currentField.id]: '' });
+
+    if (currentStep < form.fields.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleSubmit();
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSubmit = () => {
     const newErrors: Record<string, string> = {};
     form.fields.forEach(field => {
       const error = validateField(field, answers[field.id]);
@@ -73,6 +108,13 @@ const FormView = () => {
     addResponse(formId!, answers);
     setSubmitted(true);
     toast.success('Respostas enviadas com sucesso!');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleNext();
+    }
   };
 
   if (submitted) {
@@ -97,101 +139,151 @@ const FormView = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <FormChat formTitle={form.title} chatEnabled={form.customization?.chatEnabled} />
-        <Card className="shadow-elegant">
-          <CardHeader className="text-center space-y-4 border-b">
-            <div className="flex justify-center">
-              <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow">
-                <FileText className="w-6 h-6 text-primary-foreground" />
+    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
+      <FormChat formTitle={form.title} chatEnabled={form.customization?.chatEnabled} />
+      
+      <div className="w-full max-w-3xl">
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <Progress value={progress} className="h-2" />
+          <p className="text-sm text-muted-foreground mt-2 text-center">
+            Pergunta {currentStep + 1} de {form.fields.length}
+          </p>
+        </div>
+
+        {/* Question Card */}
+        <Card className={`shadow-elegant transition-all duration-300 ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
+          <CardContent className="p-8 md:p-12">
+            <div className="space-y-8">
+              {/* Question Label */}
+              <div className="space-y-2">
+                <span className="text-sm text-muted-foreground">
+                  {currentStep + 1} → {form.fields.length}
+                </span>
+                <Label className="text-2xl md:text-3xl font-bold block">
+                  {currentField?.label}
+                  {currentField?.required && <span className="text-destructive ml-1">*</span>}
+                </Label>
               </div>
+
+              {/* Answer Input */}
+              <div className="space-y-4">
+                {currentField?.type === 'text' && (
+                  <Input
+                    placeholder={currentField.placeholder || "Digite sua resposta..."}
+                    value={answers[currentField.id] || ''}
+                    onChange={(e) => {
+                      setAnswers({ ...answers, [currentField.id]: e.target.value });
+                      setErrors({ ...errors, [currentField.id]: '' });
+                    }}
+                    onKeyPress={handleKeyPress}
+                    maxLength={currentField.maxLength}
+                    className="text-lg h-12"
+                    autoFocus
+                  />
+                )}
+
+                {currentField?.type === 'textarea' && (
+                  <Textarea
+                    placeholder={currentField.placeholder || "Digite sua resposta..."}
+                    value={answers[currentField.id] || ''}
+                    onChange={(e) => {
+                      setAnswers({ ...answers, [currentField.id]: e.target.value });
+                      setErrors({ ...errors, [currentField.id]: '' });
+                    }}
+                    maxLength={currentField.maxLength}
+                    rows={6}
+                    className="text-lg resize-none"
+                    autoFocus
+                  />
+                )}
+
+                {currentField?.type === 'email' && (
+                  <Input
+                    type="email"
+                    placeholder={currentField.placeholder || "seu@email.com"}
+                    value={answers[currentField.id] || ''}
+                    onChange={(e) => {
+                      setAnswers({ ...answers, [currentField.id]: e.target.value });
+                      setErrors({ ...errors, [currentField.id]: '' });
+                    }}
+                    onKeyPress={handleKeyPress}
+                    className="text-lg h-12"
+                    autoFocus
+                  />
+                )}
+
+                {currentField?.type === 'choice' && (
+                  <RadioGroup
+                    value={answers[currentField.id] || ''}
+                    onValueChange={(value) => {
+                      setAnswers({ ...answers, [currentField.id]: value });
+                      setErrors({ ...errors, [currentField.id]: '' });
+                    }}
+                    className="space-y-3"
+                  >
+                    {currentField.options?.map((option, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent transition-colors cursor-pointer"
+                        onClick={() => {
+                          setAnswers({ ...answers, [currentField.id]: option });
+                          setErrors({ ...errors, [currentField.id]: '' });
+                        }}
+                      >
+                        <RadioGroupItem value={option} id={`${currentField.id}-${idx}`} />
+                        <Label 
+                          htmlFor={`${currentField.id}-${idx}`} 
+                          className="font-normal cursor-pointer text-base flex-1"
+                        >
+                          {option}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                )}
+
+                {errors[currentField?.id || ''] && (
+                  <p className="text-sm text-destructive animate-fade-in">
+                    {errors[currentField?.id || '']}
+                  </p>
+                )}
+
+                {currentField?.maxLength && (currentField.type === 'text' || currentField.type === 'textarea') && (
+                  <p className="text-xs text-muted-foreground">
+                    {(answers[currentField.id] || '').length} / {currentField.maxLength}
+                  </p>
+                )}
+              </div>
+
+              {/* Navigation Buttons */}
+              <div className="flex items-center justify-between pt-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handlePrevious}
+                  disabled={currentStep === 0}
+                  className="gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Anterior
+                </Button>
+
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  className="gap-2"
+                  size="lg"
+                >
+                  {currentStep === form.fields.length - 1 ? 'Enviar' : 'Próximo'}
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <p className="text-xs text-muted-foreground text-center">
+                Pressione Enter ↵ para continuar
+              </p>
             </div>
-            <CardTitle className="text-3xl">{form.title}</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {form.fields.map((field, index) => (
-                <div key={field.id} className="space-y-2">
-                  <Label className="text-base">
-                    {index + 1}. {field.label}
-                    {field.required && <span className="text-destructive ml-1">*</span>}
-                  </Label>
-
-                  {field.type === 'text' && (
-                    <Input
-                      placeholder={field.placeholder}
-                      value={answers[field.id] || ''}
-                      onChange={(e) => {
-                        setAnswers({ ...answers, [field.id]: e.target.value });
-                        setErrors({ ...errors, [field.id]: '' });
-                      }}
-                      maxLength={field.maxLength}
-                      className={errors[field.id] ? 'border-destructive' : ''}
-                    />
-                  )}
-
-                  {field.type === 'textarea' && (
-                    <Textarea
-                      placeholder={field.placeholder}
-                      value={answers[field.id] || ''}
-                      onChange={(e) => {
-                        setAnswers({ ...answers, [field.id]: e.target.value });
-                        setErrors({ ...errors, [field.id]: '' });
-                      }}
-                      maxLength={field.maxLength}
-                      rows={4}
-                      className={errors[field.id] ? 'border-destructive' : ''}
-                    />
-                  )}
-
-                  {field.type === 'email' && (
-                    <Input
-                      type="email"
-                      placeholder={field.placeholder}
-                      value={answers[field.id] || ''}
-                      onChange={(e) => {
-                        setAnswers({ ...answers, [field.id]: e.target.value });
-                        setErrors({ ...errors, [field.id]: '' });
-                      }}
-                      className={errors[field.id] ? 'border-destructive' : ''}
-                    />
-                  )}
-
-                  {field.type === 'choice' && (
-                    <RadioGroup
-                      value={answers[field.id] || ''}
-                      onValueChange={(value) => {
-                        setAnswers({ ...answers, [field.id]: value });
-                        setErrors({ ...errors, [field.id]: '' });
-                      }}
-                    >
-                      {field.options?.map((option, idx) => (
-                        <div key={idx} className="flex items-center space-x-2">
-                          <RadioGroupItem value={option} id={`${field.id}-${idx}`} />
-                          <Label htmlFor={`${field.id}-${idx}`} className="font-normal cursor-pointer">
-                            {option}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  )}
-
-                  {errors[field.id] && (
-                    <p className="text-sm text-destructive">{errors[field.id]}</p>
-                  )}
-                  {field.maxLength && (field.type === 'text' || field.type === 'textarea') && (
-                    <p className="text-xs text-muted-foreground">
-                      {(answers[field.id] || '').length} / {field.maxLength}
-                    </p>
-                  )}
-                </div>
-              ))}
-
-              <Button type="submit" className="w-full" size="lg">
-                Enviar Respostas
-              </Button>
-            </form>
           </CardContent>
         </Card>
       </div>
