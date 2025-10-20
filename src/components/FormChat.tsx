@@ -80,7 +80,7 @@ export const FormChat = ({ formTitle, chatEnabled = true }: FormChatProps) => {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-elegant"
+        className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-elegant z-50"
         size="icon"
       >
         <MessageCircle className="w-6 h-6" />
@@ -89,7 +89,7 @@ export const FormChat = ({ formTitle, chatEnabled = true }: FormChatProps) => {
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-80 sm:w-96 h-[500px] shadow-elegant flex flex-col overflow-hidden">
+    <Card className="fixed bottom-6 right-6 w-80 sm:w-96 h-[500px] shadow-elegant flex flex-col overflow-hidden z-50">
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
