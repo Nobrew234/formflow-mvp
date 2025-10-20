@@ -9,7 +9,8 @@ import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, Save, Eye, Trash2, GripVertical, Send } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Plus, Save, Eye, Trash2, GripVertical, Send, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Editor = () => {
@@ -216,76 +217,122 @@ const Editor = () => {
             )}
           </div>
 
-          {/* Right Panel - Field Config */}
+          {/* Right Panel - Field Config & Customization */}
           <Card className="p-4 h-fit sticky top-20">
-            {selectedField ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">Configurações</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => deleteField(selectedField.id)}
-                  >
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
-                </div>
+            <Tabs defaultValue="field" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="field">Campo</TabsTrigger>
+                <TabsTrigger value="custom">
+                  <Palette className="w-4 h-4 mr-1" />
+                  Design
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="field" className="mt-4">
+                {selectedField ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold">Configurações</h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteField(selectedField.id)}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
 
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Label do Campo</Label>
+                        <Input
+                          value={selectedField.label}
+                          onChange={(e) => updateField(selectedField.id, { label: e.target.value })}
+                        />
+                      </div>
+
+                      <div>
+                        <Label>Placeholder</Label>
+                        <Input
+                          value={selectedField.placeholder || ''}
+                          onChange={(e) => updateField(selectedField.id, { placeholder: e.target.value })}
+                          placeholder="Texto de exemplo..."
+                        />
+                      </div>
+
+                      {(selectedField.type === 'text' || selectedField.type === 'textarea') && (
+                        <div>
+                          <Label>Máximo de Caracteres</Label>
+                          <Input
+                            type="number"
+                            value={selectedField.maxLength || ''}
+                            onChange={(e) => updateField(selectedField.id, { maxLength: parseInt(e.target.value) || undefined })}
+                            placeholder="Sem limite"
+                          />
+                        </div>
+                      )}
+
+                      {selectedField.type === 'choice' && (
+                        <div>
+                          <Label>Opções (uma por linha)</Label>
+                          <Textarea
+                            value={selectedField.options?.join('\n') || ''}
+                            onChange={(e) => updateField(selectedField.id, { options: e.target.value.split('\n').filter(o => o.trim()) })}
+                            rows={5}
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between">
+                        <Label>Campo Obrigatório</Label>
+                        <Switch
+                          checked={selectedField.required}
+                          onCheckedChange={(checked) => updateField(selectedField.id, { required: checked })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    Selecione um campo para configurar
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="custom" className="mt-4 space-y-4">
+                <h3 className="font-semibold">Customização</h3>
+                
                 <div className="space-y-4">
-                  <div>
-                    <Label>Label do Campo</Label>
-                    <Input
-                      value={selectedField.label}
-                      onChange={(e) => updateField(selectedField.id, { label: e.target.value })}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Placeholder</Label>
-                    <Input
-                      value={selectedField.placeholder || ''}
-                      onChange={(e) => updateField(selectedField.id, { placeholder: e.target.value })}
-                      placeholder="Texto de exemplo..."
-                    />
-                  </div>
-
-                  {(selectedField.type === 'text' || selectedField.type === 'textarea') && (
-                    <div>
-                      <Label>Máximo de Caracteres</Label>
-                      <Input
-                        type="number"
-                        value={selectedField.maxLength || ''}
-                        onChange={(e) => updateField(selectedField.id, { maxLength: parseInt(e.target.value) || undefined })}
-                        placeholder="Sem limite"
-                      />
-                    </div>
-                  )}
-
-                  {selectedField.type === 'choice' && (
-                    <div>
-                      <Label>Opções (uma por linha)</Label>
-                      <Textarea
-                        value={selectedField.options?.join('\n') || ''}
-                        onChange={(e) => updateField(selectedField.id, { options: e.target.value.split('\n').filter(o => o.trim()) })}
-                        rows={5}
-                      />
-                    </div>
-                  )}
-
                   <div className="flex items-center justify-between">
-                    <Label>Campo Obrigatório</Label>
+                    <div>
+                      <Label>Chat de Ajuda</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Assistente para usuários
+                      </p>
+                    </div>
                     <Switch
-                      checked={selectedField.required}
-                      onCheckedChange={(checked) => updateField(selectedField.id, { required: checked })}
+                      checked={form.customization?.chatEnabled !== false}
+                      onCheckedChange={(checked) => {
+                        updateForm(formId!, {
+                          customization: {
+                            ...form.customization,
+                            chatEnabled: checked,
+                          }
+                        });
+                        const updated = {
+                          ...form,
+                          customization: {
+                            ...form.customization,
+                            chatEnabled: checked,
+                          }
+                        };
+                        setForm(updated);
+                      }}
                     />
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center text-muted-foreground py-8">
-                Selecione um campo para configurar
-              </div>
-            )}
+              </TabsContent>
+            </Tabs>
           </Card>
         </div>
       </div>

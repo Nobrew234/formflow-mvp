@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { FileText, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { FormChat } from '@/components/FormChat';
 
 const FormView = () => {
   const { formId } = useParams();
@@ -94,6 +95,7 @@ const FormView = () => {
   return (
     <div className="min-h-screen bg-gradient-subtle py-12 px-4">
       <div className="max-w-2xl mx-auto">
+        <FormChat formTitle={form.title} chatEnabled={form.customization?.chatEnabled} />
         <Card className="shadow-elegant">
           <CardHeader className="text-center space-y-4 border-b">
             <div className="flex justify-center">
