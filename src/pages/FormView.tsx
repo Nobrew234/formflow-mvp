@@ -20,6 +20,10 @@ const FormView = () => {
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const handleBackToHome = () => {
+    window.location.href = '/';
+  };
+
   if (!form || form.status !== 'published') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
@@ -85,7 +89,7 @@ const FormView = () => {
             <p className="text-muted-foreground mb-6">
               Obrigado por preencher o formulário.
             </p>
-            <Button onClick={() => navigate('/')}>Voltar ao Início</Button>
+            <Button onClick={handleBackToHome}>Voltar ao Início</Button>
           </CardContent>
         </Card>
       </div>
