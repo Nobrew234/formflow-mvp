@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Plus, Save, Eye, Trash2, GripVertical, Send, Palette } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Eye, Trash2, GripVertical, Send, Palette, Upload, X, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Editor = () => {
@@ -329,6 +329,93 @@ const Editor = () => {
                         setForm(updated);
                       }}
                     />
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <Label>Materiais para Download</Label>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Arquivos disponíveis após envio
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {form.customization?.downloadableFiles?.map((file) => (
+                        <div key={file.id} className="flex items-center justify-between p-2 border rounded-lg">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <FileDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            <span className="text-sm truncate">{file.name}</span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const files = form.customization?.downloadableFiles?.filter(f => f.id !== file.id) || [];
+                              updateForm(formId!, {
+                                customization: {
+                                  ...form.customization,
+                                  downloadableFiles: files,
+                                }
+                              });
+                              setForm({
+                                ...form,
+                                customization: {
+                                  ...form.customization,
+                                  downloadableFiles: files,
+                                }
+                              });
+                            }}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = '*/*';
+                        input.onchange = (e) => {
+                          const file = (e.target as HTMLInputElement).files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              const newFile = {
+                                id: crypto.randomUUID(),
+                                name: file.name,
+                                url: reader.result as string,
+                                size: file.size,
+                              };
+                              const files = [...(form.customization?.downloadableFiles || []), newFile];
+                              updateForm(formId!, {
+                                customization: {
+                                  ...form.customization,
+                                  downloadableFiles: files,
+                                }
+                              });
+                              setForm({
+                                ...form,
+                                customization: {
+                                  ...form.customization,
+                                  downloadableFiles: files,
+                                }
+                              });
+                              toast.success('Arquivo adicionado');
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        };
+                        input.click();
+                      }}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Adicionar Arquivo
+                    </Button>
                   </div>
                 </div>
               </TabsContent>

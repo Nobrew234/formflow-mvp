@@ -41,11 +41,12 @@ const FormView = () => {
         </div>
         
         <div className="flex-1 bg-card/50 backdrop-blur-sm rounded-b-xl overflow-hidden">
-          <FormChatExperience 
-            fields={form.fields}
-            formTitle={form.title}
-            onComplete={handleComplete}
-          />
+        <FormChatExperience
+          fields={form.fields}
+          formTitle={form.title}
+          onComplete={handleComplete}
+          downloadableFiles={form.customization?.downloadableFiles}
+        />
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { CheckCircle, Send } from 'lucide-react';
+import { CheckCircle, Send, Download } from 'lucide-react';
 import { z } from 'zod';
 
 interface Message {
@@ -24,16 +24,24 @@ interface Field {
   maxLength?: number;
 }
 
+interface DownloadableFile {
+  id: string;
+  name: string;
+  url: string;
+  size: number;
+}
+
 interface FormChatExperienceProps {
   fields: Field[];
   formTitle: string;
   onComplete: (answers: Record<string, any>) => void;
+  downloadableFiles?: DownloadableFile[];
 }
 
 const emailSchema = z.string().trim().email({ message: "Email inválido" });
 const phoneSchema = z.string().trim().regex(/^[\d\s\(\)\-\+]+$/, { message: "Telefone inválido" }).min(10, { message: "Telefone deve ter pelo menos 10 dígitos" });
 
-export const FormChatExperience = ({ fields, formTitle, onComplete }: FormChatExperienceProps) => {
+export const FormChatExperience = ({ fields, formTitle, onComplete, downloadableFiles }: FormChatExperienceProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentFieldIndex, setCurrentFieldIndex] = useState(-1);
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -180,15 +188,44 @@ export const FormChatExperience = ({ fields, formTitle, onComplete }: FormChatEx
 
   if (isComplete) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4 animate-fade-in">
+      <div className="flex items-center justify-center min-h-[60vh] p-4">
+        <div className="text-center space-y-6 animate-fade-in max-w-md w-full">
           <div className="flex justify-center">
             <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center">
               <CheckCircle className="w-8 h-8 text-success" />
             </div>
           </div>
-          <h2 className="text-2xl font-bold">Respostas Enviadas!</h2>
-          <p className="text-muted-foreground">Obrigado por preencher o formulário.</p>
+          <div>
+            <h2 className="text-2xl font-bold">Respostas Enviadas!</h2>
+            <p className="text-muted-foreground">Obrigado por preencher o formulário.</p>
+          </div>
+          
+          {downloadableFiles && downloadableFiles.length > 0 && (
+            <div className="space-y-3 pt-4">
+              <h3 className="font-semibold text-lg">Materiais Disponíveis</h3>
+              <div className="space-y-2">
+                {downloadableFiles.map((file) => (
+                  <Button
+                    key={file.id}
+                    variant="outline"
+                    className="w-full justify-start gap-3"
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = file.url;
+                      link.download = file.name;
+                      link.click();
+                    }}
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="flex-1 text-left truncate">{file.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {(file.size / 1024).toFixed(0)} KB
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
