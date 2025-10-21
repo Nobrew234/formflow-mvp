@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useLocation } from 'wouter';
 import { useMockAuth } from '@/hooks/useMockAuth';
 import { useMockForms } from '@/hooks/useMockForms';
 import { Button } from '@/components/ui/button';
@@ -10,18 +10,18 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const Responses = () => {
-  const { formId } = useParams();
+  const { formId } = useParams<{ formId: string }>();
   const { user } = useMockAuth();
   const { getForm } = useMockForms(user?.id);
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   
   const form = getForm(formId!);
 
   useEffect(() => {
     if (!form) {
-      navigate('/dashboard');
+      setLocation('/dashboard');
     }
-  }, [form, navigate]);
+  }, [form, setLocation]);
 
   if (!form) return null;
 
@@ -29,7 +29,7 @@ const Responses = () => {
     <div className="min-h-screen bg-gradient-subtle">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+          <Button variant="ghost" size="sm" onClick={() => setLocation('/dashboard')}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="flex-1">
@@ -56,7 +56,7 @@ const Responses = () => {
               </p>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => navigate(`/form/${formId}`)}>
+              <Button onClick={() => setLocation(`/form/${formId}`)}>
                 Visualizar Formulário
               </Button>
             </CardContent>

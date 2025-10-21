@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams } from 'wouter';
 import { useMockForms } from '@/hooks/useMockForms';
 import { Card, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -6,7 +6,7 @@ import { FormChatExperience } from '@/components/FormChatExperience';
 import { FormChat } from '@/components/FormChat';
 
 const FormView = () => {
-  const { formId } = useParams();
+  const { formId } = useParams<{ formId: string }>();
   const { getForm, addResponse } = useMockForms();
   const form = getForm(formId!);
 

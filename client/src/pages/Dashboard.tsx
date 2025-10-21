@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useLocation } from 'wouter';
 import { useMockAuth } from '@/hooks/useMockAuth';
 import { useMockForms } from '@/hooks/useMockForms';
 import { Button } from '@/components/ui/button';
@@ -21,19 +21,19 @@ import {
 
 const Dashboard = () => {
   const { user, logout, loading: authLoading } = useMockAuth();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const { forms, loading: formsLoading, createForm, deleteForm } = useMockForms(user?.id);
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/login');
+      setLocation('/login');
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, setLocation]);
 
   const handleCreateForm = () => {
     const form = createForm('Novo Formulário');
     toast.success('Formulário criado!');
-    navigate(`/editor/${form.id}`);
+    setLocation(`/editor/${form.id}`);
   };
 
   const handleDeleteForm = (formId: string, formTitle: string) => {
@@ -43,7 +43,7 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    setLocation('/login');
   };
 
   if (authLoading || formsLoading) {
@@ -134,7 +134,7 @@ const Dashboard = () => {
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={() => navigate(`/editor/${form.id}`)}
+                      onClick={() => setLocation(`/editor/${form.id}`)}
                     >
                       <Edit className="w-4 h-4 mr-1" />
                       Editar
@@ -142,7 +142,7 @@ const Dashboard = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/responses/${form.id}`)}
+                      onClick={() => setLocation(`/responses/${form.id}`)}
                     >
                       <Eye className="w-4 h-4" />
                     </Button>

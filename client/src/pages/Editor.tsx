@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'wouter';
 import { useMockAuth } from '@/hooks/useMockAuth';
 import { useMockForms, FormField } from '@/hooks/useMockForms';
 import { Button } from '@/components/ui/button';
@@ -14,10 +14,10 @@ import { ArrowLeft, Plus, Save, Eye, Trash2, GripVertical, Send, Palette, Upload
 import { toast } from 'sonner';
 
 const Editor = () => {
-  const { formId } = useParams();
+  const { formId } = useParams<{ formId: string }>();
   const { user } = useMockAuth();
   const { getForm, updateForm } = useMockForms(user?.id);
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   
   const [form, setForm] = useState(getForm(formId!));
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
@@ -26,9 +26,9 @@ const Editor = () => {
   useEffect(() => {
     if (!form) {
       toast.error('Formulário não encontrado');
-      navigate('/dashboard');
+      setLocation('/dashboard');
     }
-  }, [form, navigate]);
+  }, [form, setLocation]);
 
   const handleTitleChange = (title: string) => {
     const updated = { ...form!, title };
@@ -84,7 +84,7 @@ const Editor = () => {
 
     updateForm(formId!, { status: 'published' });
     toast.success('Formulário publicado!');
-    navigate(`/form/${formId}`);
+    setLocation(`/form/${formId}`);
   };
 
   const selectedField = form?.fields.find(f => f.id === selectedFieldId);
@@ -97,7 +97,7 @@ const Editor = () => {
       <header className="border-b bg-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+            <Button variant="ghost" size="sm" onClick={() => setLocation('/dashboard')}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <Input
