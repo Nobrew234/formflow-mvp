@@ -30,10 +30,10 @@ const Dashboard = () => {
     }
   }, [user, authLoading, setLocation]);
 
-  const handleCreateForm = () => {
-    const form = createForm('Novo Formulário');
+  const handleCreateForm = async () => {
+    const formId = await createForm('Novo Formulário');
     toast.success('Formulário criado!');
-    setLocation(`/editor/${form.id}`);
+    setLocation(`/editor/${formId}`);
   };
 
   const handleDeleteForm = (formId: string, formTitle: string) => {
