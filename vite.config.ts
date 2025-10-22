@@ -13,14 +13,14 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
   ].filter(Boolean),
   server: {
-    host: "0.0.0.0",
-    port: 5173,
-    strictPort: false,
-    allowedHosts: ["*"],
-    hmr: {
-      clientPort: 443,
+      host: true, 
+      port: 5173,
+      strictPort: true,
+      allowedHosts: ["*"],
+      hmr: {
+        clientPort: 443,
+      },
     },
-  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "client/src"),
