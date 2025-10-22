@@ -1,19 +1,32 @@
 import type { Express } from "express";
 import { storage } from "./storage";
-import { insertUserSchema, insertFormSchema, insertResponseSchema } from "@shared/schema";
+import { insertUserSchema, insertBotSchema, insertResponseSchema } from "@shared/schema";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 export function registerRoutes(app: Express) {
   
+  // Auth routes
   app.post("/api/auth/signup", async (req, res) => {
     try {
-      const validatedData = insertUserSchema.parse(req.body);
-      const existingUser = await storage.getUser(validatedData.email);
+      const { email, passwordHash } = insertUserSchema.parse(req.body);
+      const existingUser = await storage.getUserByEmail(email);
+      
       if (existingUser) {
-        return res.status(400).json({ message: "User already exists" });
+        return res.status(400).json({ message: "Usuário já existe" });
       }
-      const user = await storage.createUser(validatedData);
-      const { password, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
+      
+      const hashedPassword = await bcrypt.hash(passwordHash, 10);
+      const user = await storage.createUser({ email, passwordHash: hashedPassword });
+      
+      const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+      
+      res.json({ 
+        user: { id: user.id, email: user.email }, 
+        token 
+      });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
@@ -22,73 +35,89 @@ export function registerRoutes(app: Express) {
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { email, password } = req.body;
-      const user = await storage.getUser(email);
-      if (!user || user.password !== password) {
-        return res.status(401).json({ message: "Invalid credentials" });
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        return res.status(401).json({ message: "Credenciais inválidas" });
       }
-      const { password: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
+      
+      const validPassword = await bcrypt.compare(password, user.passwordHash);
+      if (!validPassword) {
+        return res.status(401).json({ message: "Credenciais inválidas" });
+      }
+      
+      const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+      
+      res.json({ 
+        user: { id: user.id, email: user.email }, 
+        token 
+      });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
   });
 
-  app.get("/api/forms", async (req, res) => {
+  // Bot routes
+  app.get("/api/bots", async (req, res) => {
     try {
       const userId = req.query.userId as string;
       if (!userId) {
-        return res.status(400).json({ message: "userId is required" });
+        return res.status(400).json({ message: "userId é obrigatório" });
       }
-      const forms = await storage.getForms(parseInt(userId));
-      res.json(forms);
+      const bots = await storage.getBotsByUserId(parseInt(userId));
+      res.json(bots);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
   });
 
-  app.get("/api/forms/:id", async (req, res) => {
+  app.get("/api/bots/:id", async (req, res) => {
     try {
-      const form = await storage.getForm(parseInt(req.params.id));
-      if (!form) {
-        return res.status(404).json({ message: "Form not found" });
+      const bot = await storage.getBotById(parseInt(req.params.id));
+      if (!bot) {
+        return res.status(404).json({ message: "Bot não encontrado" });
       }
-      res.json(form);
+      res.json(bot);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
   });
 
-  app.post("/api/forms", async (req, res) => {
+  app.post("/api/bots", async (req, res) => {
     try {
-      const validatedData = insertFormSchema.parse(req.body);
-      const form = await storage.createForm(validatedData);
-      res.json(form);
+      const validatedData = insertBotSchema.parse(req.body);
+      const bot = await storage.createBot(validatedData);
+      res.json(bot);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
   });
 
-  app.patch("/api/forms/:id", async (req, res) => {
+  app.patch("/api/bots/:id", async (req, res) => {
     try {
-      const form = await storage.updateForm(parseInt(req.params.id), req.body);
-      res.json(form);
+      const bot = await storage.updateBot(parseInt(req.params.id), req.body);
+      if (!bot) {
+        return res.status(404).json({ message: "Bot não encontrado" });
+      }
+      res.json(bot);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
   });
 
-  app.delete("/api/forms/:id", async (req, res) => {
+  app.delete("/api/bots/:id", async (req, res) => {
     try {
-      await storage.deleteForm(parseInt(req.params.id));
+      await storage.deleteBot(parseInt(req.params.id));
       res.json({ success: true });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
   });
 
-  app.get("/api/responses/:formId", async (req, res) => {
+  // Response routes
+  app.get("/api/responses/:botId", async (req, res) => {
     try {
-      const responses = await storage.getResponses(parseInt(req.params.formId));
+      const responses = await storage.getResponsesByBotId(parseInt(req.params.botId));
       res.json(responses);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
