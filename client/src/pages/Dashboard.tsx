@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { useMockAuth } from '@/hooks/useMockAuth';
-import { useMockForms } from '@/hooks/useMockForms';
+import { useAuth } from '@/hooks/useAuth';
+import { useForms } from '@/hooks/useForms';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

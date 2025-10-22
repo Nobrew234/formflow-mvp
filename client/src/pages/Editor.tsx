@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'wouter';
-import { useMockAuth } from '@/hooks/useMockAuth';
-import { useMockForms, FormField } from '@/hooks/useMockForms';
+import { useAuth } from '@/hooks/useAuth';
+import { useForms, FormField } from '@/hooks/useForms';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
