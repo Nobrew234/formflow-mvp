@@ -17,6 +17,21 @@ export interface FormResponse {
   submittedAt: string;
 }
 
+export interface DownloadableFile {
+  id: string;
+  name: string;
+  url: string;
+  size: number;
+}
+
+export interface FormCustomization {
+  primaryColor?: string;
+  backgroundColor?: string;
+  chatEnabled?: boolean;
+  logo?: string;
+  downloadableFiles?: DownloadableFile[];
+}
+
 export interface Form {
   id: string;
   userId: string;
@@ -25,6 +40,7 @@ export interface Form {
   status: 'draft' | 'published';
   createdAt: string;
   responses: FormResponse[];
+  customization?: FormCustomization;
 }
 
 export const useMockForms = (userId?: string) => {
@@ -53,6 +69,9 @@ export const useMockForms = (userId?: string) => {
       status: 'draft',
       createdAt: new Date().toISOString(),
       responses: [],
+      customization: {
+        chatEnabled: true,
+      },
     };
 
     const allForms = JSON.parse(localStorage.getItem('chatflow_forms') || '[]');
