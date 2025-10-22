@@ -1,6 +1,5 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
 
 export interface FormField {
   id: string;
@@ -42,6 +41,11 @@ export interface Form {
   flow: any;
   createdAt: string;
   updatedAt: string;
+  // Computed fields for compatibility
+  title?: string;
+  fields?: FormField[];
+  responses?: FormResponse[];
+  customization?: FormCustomization;
 }
 
 const API_URL = '/api';
@@ -76,14 +80,7 @@ export const useForms = (userId?: number) => {
       const res = await fetch(`${API_URL}/bots`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ 
-          name, 
-          status: 'draft', 
-          flow: {
-            fields: [],
-            customization: { chatEnabled: true }
-          }
-        }),
+        body: JSON.stringify({ name, status: 'draft', flow: {} }),
       });
 
       if (!res.ok) throw new Error('Erro ao criar formulário');
@@ -128,70 +125,20 @@ export const useForms = (userId?: number) => {
 
   const createForm = async (title: string) => {
     const form = await createMutation.mutateAsync(title);
-    return form.id;
+    return { ...form, id: String(form.id) };
   };
 
-  const updateForm = async (formId: string, updates: Partial<any>) => {
-    const currentForm = forms.find(f => String(f.id) === formId);
-    if (!currentForm) return;
-
-    const flowUpdates: any = {};
-    
-    if (updates.title !== undefined) {
-      await updateMutation.mutateAsync({ 
-        id: Number(formId), 
-        updates: { name: updates.title }
-      });
-    }
-    
-    if (updates.fields !== undefined) {
-      flowUpdates.fields = updates.fields;
-    }
-    
-    if (updates.customization !== undefined) {
-      flowUpdates.customization = updates.customization;
-    }
-    
-    if (updates.status !== undefined) {
-      await updateMutation.mutateAsync({ 
-        id: Number(formId), 
-        updates: { status: updates.status }
-      });
-    }
-
-    if (Object.keys(flowUpdates).length > 0) {
-      await updateMutation.mutateAsync({ 
-        id: Number(formId), 
-        updates: { 
-          flow: { 
-            ...currentForm.flow,
-            ...flowUpdates
-          }
-        }
-      });
-    }
+  const updateForm = async (formId: string, updates: Partial<Form>) => {
+    await updateMutation.mutateAsync({ id: Number(formId), updates });
   };
 
   const deleteForm = async (formId: string) => {
     await deleteMutation.mutateAsync(Number(formId));
   };
 
-  const getForm = useCallback((formId: string) => {
-    const form = forms.find(f => String(f.id) === formId);
-    if (!form) return undefined;
-
-    return {
-      id: String(form.id),
-      userId: form.userId,
-      title: form.name,
-      status: form.status,
-      fields: form.flow?.fields || [],
-      customization: form.flow?.customization || { chatEnabled: true },
-      responses: [],
-      createdAt: form.createdAt,
-      updatedAt: form.updatedAt,
-    };
-  }, [forms]);
+  const getForm = (formId: string) => {
+    return forms.find(f => String(f.id) === formId);
+  };
 
   const addResponse = async (formId: string, answers: Record<string, any>) => {
     const res = await fetch(`${API_URL}/forms/${formId}/responses`, {
@@ -205,43 +152,13 @@ export const useForms = (userId?: number) => {
     queryClient.invalidateQueries({ queryKey: ['responses', formId] });
   };
 
-  const useResponses = (formId?: string) => {
-    return useQuery({
-      queryKey: ['responses', formId],
-      queryFn: async () => {
-        const res = await fetch(`${API_URL}/bots/${formId}/responses`, {
-          headers: getAuthHeaders(),
-        });
-
-        if (!res.ok) throw new Error('Erro ao buscar respostas');
-        
-        const responses = await res.json() as FormResponse[];
-        return responses.map(r => ({
-          id: String(r.id),
-          formId: String(r.botId),
-          answers: r.data,
-          submittedAt: r.submittedAt,
-        }));
-      },
-      enabled: !!formId,
-    });
-  };
-
   return {
-    forms: forms.map(f => ({ 
-      id: String(f.id), 
-      title: f.name,
-      status: f.status,
-      fields: f.flow?.fields || [],
-      responses: [],
-      customization: f.flow?.customization || { chatEnabled: true },
-    })),
+    forms: forms.map(f => ({ ...f, id: String(f.id), title: f.name })),
     loading,
     createForm,
     updateForm,
     deleteForm,
     getForm,
     addResponse,
-    useResponses,
   };
 };

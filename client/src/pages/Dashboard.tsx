@@ -20,9 +20,9 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Dashboard = () => {
-  const { user, logout, loading: authLoading } = useAuth();
+  const { user, logout, loading: authLoading } = useMockAuth();
   const [, setLocation] = useLocation();
-  const { forms, loading: formsLoading, createForm, deleteForm } = useForms(user?.id);
+  const { forms, loading: formsLoading, createForm, deleteForm } = useMockForms(user?.id);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -30,10 +30,10 @@ const Dashboard = () => {
     }
   }, [user, authLoading, setLocation]);
 
-  const handleCreateForm = async () => {
-    const formId = await createForm('Novo Formulário');
+  const handleCreateForm = () => {
+    const form = createForm('Novo Formulário');
     toast.success('Formulário criado!');
-    setLocation(`/editor/${formId}`);
+    setLocation(`/editor/${form.id}`);
   };
 
   const handleDeleteForm = (formId: string, formTitle: string) => {

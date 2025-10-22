@@ -14,7 +14,7 @@ const Signup = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signup } = useAuth();
+  const { signup } = useMockAuth();
   const [, setLocation] = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
