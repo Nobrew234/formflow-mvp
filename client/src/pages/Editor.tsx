@@ -19,9 +19,17 @@ const Editor = () => {
   const { getForm, updateForm } = useForms(user?.id);
   const [, setLocation] = useLocation();
   
-  const [form, setForm] = useState(getForm(formId!));
+  const initialForm = getForm(formId!);
+  const [form, setForm] = useState(initialForm);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+
+  useEffect(() => {
+    const updatedForm = getForm(formId!);
+    if (updatedForm) {
+      setForm(updatedForm);
+    }
+  }, [formId, getForm]);
 
   useEffect(() => {
     if (!form) {
@@ -30,13 +38,13 @@ const Editor = () => {
     }
   }, [form, setLocation]);
 
-  const handleTitleChange = (title: string) => {
+  const handleTitleChange = async (title: string) => {
     const updated = { ...form!, title };
     setForm(updated);
-    updateForm(formId!, updated);
+    await updateForm(formId!, { title });
   };
 
-  const addField = (type: FormField['type']) => {
+  const addField = async (type: FormField['type']) => {
     const newField: FormField = {
       id: crypto.randomUUID(),
       type,
@@ -51,38 +59,38 @@ const Editor = () => {
 
     const updated = { ...form!, fields: [...form!.fields, newField] };
     setForm(updated);
-    updateForm(formId!, updated);
+    await updateForm(formId!, { fields: updated.fields });
     setSelectedFieldId(newField.id);
     toast.success('Campo adicionado');
   };
 
-  const updateField = (fieldId: string, updates: Partial<FormField>) => {
+  const updateField = async (fieldId: string, updates: Partial<FormField>) => {
     const updated = {
       ...form!,
       fields: form!.fields.map(f => f.id === fieldId ? { ...f, ...updates } : f)
     };
     setForm(updated);
-    updateForm(formId!, updated);
+    await updateForm(formId!, { fields: updated.fields });
   };
 
-  const deleteField = (fieldId: string) => {
+  const deleteField = async (fieldId: string) => {
     const updated = {
       ...form!,
       fields: form!.fields.filter(f => f.id !== fieldId)
     };
     setForm(updated);
-    updateForm(formId!, updated);
+    await updateForm(formId!, { fields: updated.fields });
     setSelectedFieldId(null);
     toast.success('Campo removido');
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (form!.fields.length === 0) {
       toast.error('Adicione pelo menos um campo ao formulário');
       return;
     }
 
-    updateForm(formId!, { status: 'published' });
+    await updateForm(formId!, { status: 'published' });
     toast.success('Formulário publicado!');
     setLocation(`/form/${formId}`);
   };

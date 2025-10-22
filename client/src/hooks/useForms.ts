@@ -1,5 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 
 export interface FormField {
   id: string;
@@ -175,7 +176,7 @@ export const useForms = (userId?: number) => {
     await deleteMutation.mutateAsync(Number(formId));
   };
 
-  const getForm = (formId: string) => {
+  const getForm = useCallback((formId: string) => {
     const form = forms.find(f => String(f.id) === formId);
     if (!form) return undefined;
 
@@ -190,7 +191,7 @@ export const useForms = (userId?: number) => {
       createdAt: form.createdAt,
       updatedAt: form.updatedAt,
     };
-  };
+  }, [forms]);
 
   const addResponse = async (formId: string, answers: Record<string, any>) => {
     const res = await fetch(`${API_URL}/forms/${formId}/responses`, {

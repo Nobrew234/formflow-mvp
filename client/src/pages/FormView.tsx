@@ -10,12 +10,16 @@ const FormView = () => {
   const { getForm, addResponse } = useForms();
   const form = getForm(formId!);
 
-  const handleComplete = (answers: Record<string, any>) => {
-    addResponse(formId!, answers);
-    toast.success('Respostas enviadas com sucesso!');
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 2000);
+  const handleComplete = async (answers: Record<string, any>) => {
+    try {
+      await addResponse(formId!, answers);
+      toast.success('Respostas enviadas com sucesso!');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    } catch (error) {
+      toast.error('Erro ao enviar respostas. Tente novamente.');
+    }
   };
 
   if (!form || form.status !== 'published') {

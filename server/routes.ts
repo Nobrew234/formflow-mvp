@@ -36,12 +36,13 @@ export function registerRoutes(app: Express) {
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await storage.createUser({ email, passwordHash: hashedPassword });
+      const userName = name || email.split('@')[0];
+      const user = await storage.createUser({ email, passwordHash: hashedPassword, name: userName });
 
       const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
       res.json({ 
-        user: { id: user.id, email: user.email, name: name || user.email.split('@')[0] }, 
+        user: { id: user.id, email: user.email, name: user.name || userName }, 
         token 
       });
     } catch (error: any) {
@@ -55,7 +56,7 @@ export function registerRoutes(app: Express) {
       if (!user) {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
-      res.json({ id: user.id, email: user.email, name: user.email.split('@')[0] });
+      res.json({ id: user.id, email: user.email, name: user.name || user.email.split('@')[0] });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
@@ -78,7 +79,7 @@ export function registerRoutes(app: Express) {
       const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
       res.json({ 
-        user: { id: user.id, email: user.email, name: user.email.split('@')[0] }, 
+        user: { id: user.id, email: user.email, name: user.name || user.email.split('@')[0] }, 
         token 
       });
     } catch (error: any) {
