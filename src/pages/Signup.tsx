@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'wouter';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { toast } from 'sonner';
 import { UserPlus } from 'lucide-react';
 
@@ -15,7 +15,7 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signup } = useMockAuth();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +36,7 @@ const Signup = () => {
     
     if (result.success) {
       toast.success('Conta criada com sucesso!');
-      setLocation('/dashboard');
+      navigate('/dashboard');
     } else {
       toast.error(result.error || 'Erro ao criar conta');
     }

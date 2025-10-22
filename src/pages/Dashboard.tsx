@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { Link, useLocation } from 'wouter';
-import { useAuth } from '@/hooks/useAuth';
-import { useForms } from '@/hooks/useForms';
+import { useNavigate, Link } from 'react-router-dom';
+import { useMockAuth } from '@/hooks/useMockAuth';
+import { useMockForms } from '@/hooks/useMockForms';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,19 +21,19 @@ import {
 
 const Dashboard = () => {
   const { user, logout, loading: authLoading } = useMockAuth();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const { forms, loading: formsLoading, createForm, deleteForm } = useMockForms(user?.id);
 
   useEffect(() => {
     if (!authLoading && !user) {
-      setLocation('/login');
+      navigate('/login');
     }
-  }, [user, authLoading, setLocation]);
+  }, [user, authLoading, navigate]);
 
   const handleCreateForm = () => {
     const form = createForm('Novo Formulário');
     toast.success('Formulário criado!');
-    setLocation(`/editor/${form.id}`);
+    navigate(`/editor/${form.id}`);
   };
 
   const handleDeleteForm = (formId: string, formTitle: string) => {
@@ -43,7 +43,7 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     logout();
-    setLocation('/login');
+    navigate('/login');
   };
 
   if (authLoading || formsLoading) {
@@ -134,7 +134,7 @@ const Dashboard = () => {
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={() => setLocation(`/editor/${form.id}`)}
+                      onClick={() => navigate(`/editor/${form.id}`)}
                     >
                       <Edit className="w-4 h-4 mr-1" />
                       Editar
@@ -142,7 +142,7 @@ const Dashboard = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setLocation(`/responses/${form.id}`)}
+                      onClick={() => navigate(`/responses/${form.id}`)}
                     >
                       <Eye className="w-4 h-4" />
                     </Button>

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { useParams, useLocation } from 'wouter';
-import { useAuth } from '@/hooks/useAuth';
-import { useForms } from '@/hooks/useForms';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useMockAuth } from '@/hooks/useMockAuth';
+import { useMockForms } from '@/hooks/useMockForms';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,18 +10,18 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const Responses = () => {
-  const { formId } = useParams<{ formId: string }>();
+  const { formId } = useParams();
   const { user } = useMockAuth();
   const { getForm } = useMockForms(user?.id);
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   
   const form = getForm(formId!);
 
   useEffect(() => {
     if (!form) {
-      setLocation('/dashboard');
+      navigate('/dashboard');
     }
-  }, [form, setLocation]);
+  }, [form, navigate]);
 
   if (!form) return null;
 
@@ -29,7 +29,7 @@ const Responses = () => {
     <div className="min-h-screen bg-gradient-subtle">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => setLocation('/dashboard')}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="flex-1">
@@ -56,7 +56,7 @@ const Responses = () => {
               </p>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => setLocation(`/form/${formId}`)}>
+              <Button onClick={() => navigate(`/form/${formId}`)}>
                 Visualizar Formulário
               </Button>
             </CardContent>
