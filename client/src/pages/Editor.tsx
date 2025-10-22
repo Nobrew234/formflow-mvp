@@ -15,8 +15,8 @@ import { toast } from 'sonner';
 
 const Editor = () => {
   const { formId } = useParams<{ formId: string }>();
-  const { user } = useMockAuth();
-  const { getForm, updateForm } = useMockForms(user?.id);
+  const { user } = useAuth();
+  const { getForm, updateForm } = useForms(user?.id);
   const [, setLocation] = useLocation();
   
   const [form, setForm] = useState(getForm(formId!));

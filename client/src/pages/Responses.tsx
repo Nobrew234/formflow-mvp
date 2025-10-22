@@ -11,8 +11,8 @@ import { ptBR } from 'date-fns/locale';
 
 const Responses = () => {
   const { formId } = useParams<{ formId: string }>();
-  const { user } = useMockAuth();
-  const { getForm } = useMockForms(user?.id);
+  const { user } = useAuth();
+  const { getForm } = useForms(user?.id);
   const [, setLocation] = useLocation();
   
   const form = getForm(formId!);

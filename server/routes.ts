@@ -7,24 +7,24 @@ import jwt from "jsonwebtoken";
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 export function registerRoutes(app: Express) {
-  
+
   // Auth routes
   app.post("/api/auth/signup", async (req, res) => {
     try {
       const { email, passwordHash } = insertUserSchema.parse(req.body);
       const existingUser = await storage.getUserByEmail(email);
-      
+
       if (existingUser) {
         return res.status(400).json({ message: "Usuário já existe" });
       }
-      
+
       const hashedPassword = await bcrypt.hash(passwordHash, 10);
       const user = await storage.createUser({ email, passwordHash: hashedPassword });
-      
+
       const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-      
+
       res.json({ 
-        user: { id: user.id, email: user.email }, 
+        user: { id: user.id, email: user.email, name: user.email.split('@')[0] }, 
         token 
       });
     } catch (error: any) {
@@ -36,20 +36,20 @@ export function registerRoutes(app: Express) {
     try {
       const { email, password } = req.body;
       const user = await storage.getUserByEmail(email);
-      
+
       if (!user) {
         return res.status(401).json({ message: "Credenciais inválidas" });
       }
-      
+
       const validPassword = await bcrypt.compare(password, user.passwordHash);
       if (!validPassword) {
         return res.status(401).json({ message: "Credenciais inválidas" });
       }
-      
+
       const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-      
+
       res.json({ 
-        user: { id: user.id, email: user.email }, 
+        user: { id: user.id, email: user.email, name: user.email.split('@')[0] }, 
         token 
       });
     } catch (error: any) {

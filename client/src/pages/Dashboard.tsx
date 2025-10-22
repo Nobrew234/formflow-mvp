@@ -20,9 +20,9 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Dashboard = () => {
-  const { user, logout, loading: authLoading } = useMockAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
-  const { forms, loading: formsLoading, createForm, deleteForm } = useMockForms(user?.id);
+  const { forms, loading: formsLoading, createForm, deleteForm } = useForms(user?.id);
 
   useEffect(() => {
     if (!authLoading && !user) {

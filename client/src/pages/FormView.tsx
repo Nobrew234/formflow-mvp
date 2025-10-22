@@ -7,7 +7,7 @@ import { FormChat } from '@/components/FormChat';
 
 const FormView = () => {
   const { formId } = useParams<{ formId: string }>();
-  const { getForm, addResponse } = useMockForms();
+  const { getForm, addResponse } = useForms();
   const form = getForm(formId!);
 
   const handleComplete = (answers: Record<string, any>) => {
