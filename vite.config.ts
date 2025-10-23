@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => ({
       host: true, 
       port: 8080,
       strictPort: true,
-      allowedHosts: ["*"],
+      allowedHosts: ["*", "3e67edda-905a-418e-b127-5059f037f0f9-00-2qkoh6pjqfu09.spock.replit.dev"],
       hmr: {
         clientPort: 443,
       },
