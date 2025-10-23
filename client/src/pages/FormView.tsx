@@ -1,22 +1,25 @@
 import { useParams } from 'wouter';
-import { useMockForms } from '@/hooks/useMockForms';
+import { useForms } from '@/hooks/useForms';
 import { Card, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { FormChatExperience } from '@/components/FormChatExperience';
 import { FormChat } from '@/components/FormChat';
 
 const FormView = () => {
-  const params = useParams<{ formId: string }>();
-  const formId = params.formId;
-  const { getForm, addResponse } = useMockForms();
+  const { formId } = useParams<{ formId: string }>();
+  const { getForm, addResponse } = useForms();
   const form = getForm(formId!);
 
-  const handleComplete = (answers: Record<string, any>) => {
-    addResponse(formId!, answers);
-    toast.success('Respostas enviadas com sucesso!');
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 2000);
+  const handleComplete = async (answers: Record<string, any>) => {
+    try {
+      await addResponse(formId!, answers);
+      toast.success('Respostas enviadas com sucesso!');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    } catch (error) {
+      toast.error('Erro ao enviar respostas. Tente novamente.');
+    }
   };
 
   if (!form || form.status !== 'published') {

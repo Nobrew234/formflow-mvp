@@ -18,7 +18,7 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     
-    "baseUrl": "",
+    "baseUrl": ".",
     "paths": {
       "@shared/*": ["./shared/*"]
     }
