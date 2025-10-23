@@ -46,7 +46,7 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     app.use(express.static("dist/public"));
-    app.get("/*", (_req, res) => {
+    app.get("*", (_req, res) => {
       res.sendFile("index.html", { root: "dist/public" });
     });
   }

@@ -1,65 +1,51 @@
-
-import { pgTable, serial, varchar, timestamp, integer, jsonb } from "drizzle-orm/pg-core";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { pgTable, text, serial, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
-// Tabela de usuários
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }),
-  email: varchar("email", { length: 255 }).notNull().unique(),
-  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  name: text("name"),
 });
 
-// Tabela de bots
-export const bots = pgTable("bots", {
+export const forms = pgTable("forms", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  name: varchar("name", { length: 255 }).notNull(),
-  flow: jsonb("flow"),
-  status: varchar("status", { length: 50 }).notNull().default("draft"),
+  userId: serial("user_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  fields: jsonb("fields").notNull().default([]),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Tabela de respostas
 export const responses = pgTable("responses", {
   id: serial("id").primaryKey(),
-  botId: integer("bot_id").notNull().references(() => bots.id, { onDelete: "cascade" }),
+  formId: serial("form_id").notNull(),
   data: jsonb("data").notNull(),
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
 });
 
-// Schemas Zod para validação
 export const insertUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
   name: z.string().optional(),
-  email: z.string().email("Email inválido"),
-  passwordHash: z.string().min(8, "Senha deve ter no mínimo 8 caracteres"),
 });
 
-export const selectUserSchema = createSelectSchema(users);
-
-export const insertBotSchema = z.object({
+export const insertFormSchema = z.object({
   userId: z.number(),
-  name: z.string().min(1, "Nome do bot é obrigatório"),
-  flow: z.any().optional(),
-  status: z.enum(["draft", "published"]).optional(),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  fields: z.any().default([]),
 });
-
-export const selectBotSchema = createSelectSchema(bots);
 
 export const insertResponseSchema = z.object({
-  botId: z.number(),
-  data: z.record(z.any()),
+  formId: z.number(),
+  data: z.any(),
 });
 
-export const selectResponseSchema = createSelectSchema(responses);
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertForm = z.infer<typeof insertFormSchema>;
+export type InsertResponse = z.infer<typeof insertResponseSchema>;
 
-// Tipos TypeScript
 export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
-export type Bot = typeof bots.$inferSelect;
-export type NewBot = typeof bots.$inferInsert;
+export type Form = typeof forms.$inferSelect;
 export type Response = typeof responses.$inferSelect;
-export type NewResponse = typeof responses.$inferInsert;

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { useParams, useLocation } from 'wouter';
-import { useAuth } from '@/hooks/useAuth';
-import { useForms } from '@/hooks/useForms';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useMockAuth } from '@/hooks/useMockAuth';
+import { useMockForms } from '@/hooks/useMockForms';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,48 +10,39 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const Responses = () => {
-  const { formId } = useParams<{ formId: string }>();
-  const { user } = useAuth();
-  const { getForm, useResponses } = useForms(user?.id);
-  const [, setLocation] = useLocation();
+  const { formId } = useParams();
+  const { user } = useMockAuth();
+  const { getForm } = useMockForms(user?.id);
+  const navigate = useNavigate();
   
   const form = getForm(formId!);
-  const { data: responses = [], isLoading: loadingResponses } = useResponses(formId);
 
   useEffect(() => {
     if (!form) {
-      setLocation('/dashboard');
+      navigate('/dashboard');
     }
-  }, [form, setLocation]);
+  }, [form, navigate]);
 
   if (!form) return null;
-  
-  if (loadingResponses) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Carregando respostas...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => setLocation('/dashboard')}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="flex-1">
             <h1 className="text-xl font-bold">{form.title}</h1>
             <p className="text-sm text-muted-foreground">
-              {responses.length} {responses.length === 1 ? 'resposta' : 'respostas'}
+              {form.responses.length} {form.responses.length === 1 ? 'resposta' : 'respostas'}
             </p>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {responses.length === 0 ? (
+        {form.responses.length === 0 ? (
           <Card className="text-center py-12 shadow-elegant">
             <CardHeader>
               <div className="flex justify-center mb-4">
@@ -65,18 +56,18 @@ const Responses = () => {
               </p>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => setLocation(`/form/${formId}`)}>
+              <Button onClick={() => navigate(`/form/${formId}`)}>
                 Visualizar Formulário
               </Button>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-4">
-            {responses.map((response, index) => (
+            {form.responses.map((response, index) => (
               <Card key={response.id} className="shadow-elegant">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Resposta #{responses.length - index}</CardTitle>
+                    <CardTitle className="text-lg">Resposta #{form.responses.length - index}</CardTitle>
                     <Badge variant="outline">
                       {format(new Date(response.submittedAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                     </Badge>

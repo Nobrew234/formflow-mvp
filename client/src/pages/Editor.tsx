@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useParams } from 'wouter';
-import { useAuth } from '@/hooks/useAuth';
-import { useForms, FormField } from '@/hooks/useForms';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useMockAuth } from '@/hooks/useMockAuth';
+import { useMockForms, FormField } from '@/hooks/useMockForms';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,37 +14,29 @@ import { ArrowLeft, Plus, Save, Eye, Trash2, GripVertical, Send, Palette, Upload
 import { toast } from 'sonner';
 
 const Editor = () => {
-  const { formId } = useParams<{ formId: string }>();
-  const { user } = useAuth();
-  const { getForm, updateForm } = useForms(user?.id);
-  const [, setLocation] = useLocation();
+  const { formId } = useParams();
+  const { user } = useMockAuth();
+  const { getForm, updateForm } = useMockForms(user?.id);
+  const navigate = useNavigate();
   
-  const initialForm = getForm(formId!);
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState(getForm(formId!));
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
-    const updatedForm = getForm(formId!);
-    if (updatedForm) {
-      setForm(updatedForm);
-    }
-  }, [formId, getForm]);
-
-  useEffect(() => {
     if (!form) {
       toast.error('Formulário não encontrado');
-      setLocation('/dashboard');
+      navigate('/dashboard');
     }
-  }, [form, setLocation]);
+  }, [form, navigate]);
 
-  const handleTitleChange = async (title: string) => {
+  const handleTitleChange = (title: string) => {
     const updated = { ...form!, title };
     setForm(updated);
-    await updateForm(formId!, { title });
+    updateForm(formId!, updated);
   };
 
-  const addField = async (type: FormField['type']) => {
+  const addField = (type: FormField['type']) => {
     const newField: FormField = {
       id: crypto.randomUUID(),
       type,
@@ -59,40 +51,40 @@ const Editor = () => {
 
     const updated = { ...form!, fields: [...form!.fields, newField] };
     setForm(updated);
-    await updateForm(formId!, { fields: updated.fields });
+    updateForm(formId!, updated);
     setSelectedFieldId(newField.id);
     toast.success('Campo adicionado');
   };
 
-  const updateField = async (fieldId: string, updates: Partial<FormField>) => {
+  const updateField = (fieldId: string, updates: Partial<FormField>) => {
     const updated = {
       ...form!,
       fields: form!.fields.map(f => f.id === fieldId ? { ...f, ...updates } : f)
     };
     setForm(updated);
-    await updateForm(formId!, { fields: updated.fields });
+    updateForm(formId!, updated);
   };
 
-  const deleteField = async (fieldId: string) => {
+  const deleteField = (fieldId: string) => {
     const updated = {
       ...form!,
       fields: form!.fields.filter(f => f.id !== fieldId)
     };
     setForm(updated);
-    await updateForm(formId!, { fields: updated.fields });
+    updateForm(formId!, updated);
     setSelectedFieldId(null);
     toast.success('Campo removido');
   };
 
-  const handlePublish = async () => {
+  const handlePublish = () => {
     if (form!.fields.length === 0) {
       toast.error('Adicione pelo menos um campo ao formulário');
       return;
     }
 
-    await updateForm(formId!, { status: 'published' });
+    updateForm(formId!, { status: 'published' });
     toast.success('Formulário publicado!');
-    setLocation(`/form/${formId}`);
+    navigate(`/form/${formId}`);
   };
 
   const selectedField = form?.fields.find(f => f.id === selectedFieldId);
@@ -105,7 +97,7 @@ const Editor = () => {
       <header className="border-b bg-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
-            <Button variant="ghost" size="sm" onClick={() => setLocation('/dashboard')}>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <Input
