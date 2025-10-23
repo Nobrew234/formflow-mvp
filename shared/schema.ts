@@ -32,21 +32,25 @@ export const responses = pgTable("responses", {
 });
 
 // Schemas Zod para validação
-export const insertUserSchema = createInsertSchema(users, {
+export const insertUserSchema = z.object({
+  name: z.string().optional(),
   email: z.string().email("Email inválido"),
   passwordHash: z.string().min(8, "Senha deve ter no mínimo 8 caracteres"),
 });
 
 export const selectUserSchema = createSelectSchema(users);
 
-export const insertBotSchema = createInsertSchema(bots, {
+export const insertBotSchema = z.object({
+  userId: z.number(),
   name: z.string().min(1, "Nome do bot é obrigatório"),
+  flow: z.any().optional(),
   status: z.enum(["draft", "published"]).optional(),
 });
 
 export const selectBotSchema = createSelectSchema(bots);
 
-export const insertResponseSchema = createInsertSchema(responses, {
+export const insertResponseSchema = z.object({
+  botId: z.number(),
   data: z.record(z.any()),
 });
 
